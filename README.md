@@ -46,6 +46,6 @@ Better expression parser without eval()
 Calculation history panel
 
 Author
-CodeWithKalai Tech
-YouTube: @CodeWithKalai 
-GitHub: github.com/kalaiarasan2026
+Kalaiarasan 
+YouTube: https://youtube.com/@codewithkalai
+GitHub: https://github.com/kalaiarasan2026
