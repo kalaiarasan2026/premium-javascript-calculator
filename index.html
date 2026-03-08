@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Premium Calculator</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0d0d0f;
+      --surface: #141418;
+      --surface2: #1c1c22;
+      --border: #2a2a35;
+      --accent: #c8ff00;
+      --accent-dim: #a3d400;
+      --text: #f0f0f5;
+      --text-muted: #6b6b7a;
+      --operator: #ff6b35;
+      --danger: #ff3b5c;
+      --special: #7b7bff;
+      --equal: #c8ff00;
+      --radius: 16px;
+      --shadow: 0 32px 80px rgba(0,0,0,0.6);
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+      font-family: 'DM Mono', monospace;
+      overflow: hidden;
+    }
+
+    /* Atmospheric background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 20% 80%, rgba(200,255,0,0.05) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 60% at 80% 20%, rgba(123,123,255,0.06) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .calculator {
+      width: 340px;
+      background: var(--surface);
+      border-radius: 28px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,0.04);
+      overflow: hidden;
+      animation: slideUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(40px) scale(0.96); }
+      to   { opacity: 1; transform: translateY(0)   scale(1); }
+    }
+
+    /* Top bar */
+    .top-bar {
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,0.02);
+    }
+
+    .top-bar span {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .top-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .top-dots i {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: block;
+    }
+
+    .top-dots i:nth-child(1) { background: var(--danger); }
+    .top-dots i:nth-child(2) { background: var(--operator); }
+    .top-dots i:nth-child(3) { background: var(--accent); }
+
+    /* Display */
+    .display-box {
+      padding: 20px 24px 16px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      min-height: 100px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      gap: 4px;
+    }
+
+    .history {
+      font-size: 12px;
+      color: var(--text-muted);
+      min-height: 18px;
+      text-align: right;
+      letter-spacing: 0.02em;
+      transition: opacity 0.2s;
+    }
+
+    #screen {
+      width: 100%;
+      background: transparent;
+      border: none;
+      outline: none;
+      text-align: right;
+      font-family: 'Syne', sans-serif;
+      font-size: 38px;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -0.02em;
+      caret-color: var(--accent);
+      line-height: 1.1;
+      word-break: break-all;
+    }
+
+    /* Buttons */
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      padding: 16px;
+    }
+
+    .btn {
+      height: 68px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface2);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.12s, transform 0.1s, box-shadow 0.12s, border-color 0.12s;
+      position: relative;
+      overflow: hidden;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    .btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: rgba(255,255,255,0);
+      transition: background 0.15s;
+    }
+
+    .btn:active {
+      transform: scale(0.92);
+    }
+
+    .btn:active::after {
+      background: rgba(255,255,255,0.06);
+    }
+
+    .btn:hover {
+      border-color: #3a3a48;
+      background: #222230;
+    }
+
+    /* Danger (AC) */
+    .btn.danger {
+      color: var(--danger);
+      border-color: rgba(255,59,92,0.25);
+      background: rgba(255,59,92,0.08);
+    }
+    .btn.danger:hover {
+      background: rgba(255,59,92,0.16);
+      border-color: rgba(255,59,92,0.4);
+    }
+
+    /* Special (DEL, %) */
+    .btn.special {
+      color: var(--special);
+      border-color: rgba(123,123,255,0.2);
+      background: rgba(123,123,255,0.07);
+    }
+    .btn.special:hover {
+      background: rgba(123,123,255,0.14);
+      border-color: rgba(123,123,255,0.35);
+    }
+
+    /* Operators */
+    .btn.operator {
+      color: var(--operator);
+      border-color: rgba(255,107,53,0.25);
+      background: rgba(255,107,53,0.07);
+      font-size: 22px;
+    }
+    .btn.operator:hover {
+      background: rgba(255,107,53,0.16);
+      border-color: rgba(255,107,53,0.4);
+    }
+
+    /* Zero (wide) */
+    .btn.zero {
+      grid-column: span 2;
+    }
+
+    /* Equal */
+    .btn.equal {
+      background: var(--accent);
+      color: #0d0d0f;
+      border-color: var(--accent);
+      font-size: 22px;
+      box-shadow: 0 4px 24px rgba(200,255,0,0.25);
+    }
+    .btn.equal:hover {
+      background: var(--accent-dim);
+      border-color: var(--accent-dim);
+      box-shadow: 0 4px 32px rgba(200,255,0,0.4);
+    }
+    .btn.equal:active {
+      box-shadow: 0 2px 12px rgba(200,255,0,0.2);
+    }
+
+    /* Ripple */
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      background: rgba(255,255,255,0.12);
+      transform: scale(0);
+      animation: ripple 0.4s linear;
+      pointer-events: none;
+    }
+    @keyframes ripple {
+      to { transform: scale(3); opacity: 0; }
+    }
+
+    /* Press flash on display */
+    .display-box.flash {
+      animation: flashIn 0.15s ease;
+    }
+    @keyframes flashIn {
+      0%   { background: rgba(200,255,0,0.06); }
+      100% { background: var(--bg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="calculator">
+      <div class="top-bar">
+        <span>CodeWithKalai Calculator</span>
+        <div class="top-dots">
+          <i></i><i></i><i></i>
+        </div>
+      </div>
+
+      <div class="display-box" id="display-box">
+        <div id="history" class="history"></div>
+        <input type="text" id="screen" value="0" readonly />
+      </div>
+
+      <div class="buttons">
+        <button class="btn danger"   data-value="C">AC</button>
+        <button class="btn special"  data-value="DEL">DEL</button>
+        <button class="btn special"  data-value="%">%</button>
+        <button class="btn operator" data-value="/">÷</button>
+
+        <button class="btn" data-value="7">7</button>
+        <button class="btn" data-value="8">8</button>
+        <button class="btn" data-value="9">9</button>
+        <button class="btn operator" data-value="*">×</button>
+
+        <button class="btn" data-value="4">4</button>
+        <button class="btn" data-value="5">5</button>
+        <button class="btn" data-value="6">6</button>
+        <button class="btn operator" data-value="-">−</button>
+
+        <button class="btn" data-value="1">1</button>
+        <button class="btn" data-value="2">2</button>
+        <button class="btn" data-value="3">3</button>
+        <button class="btn operator" data-value="+">+</button>
+
+        <button class="btn zero"  data-value="0">0</button>
+        <button class="btn"       data-value=".">.</button>
+        <button class="btn equal" data-value="=">=</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const screen  = document.getElementById('screen');
+    const history = document.getElementById('history');
+    const display = document.getElementById('display-box');
+
+    let current    = '0';
+    let expression = '';
+    let justEvaled = false;
+
+    function updateScreen(val) {
+      screen.value = val;
+      // Scale down font if number is long
+      const len = val.toString().length;
+      screen.style.fontSize = len > 12 ? '22px' : len > 9 ? '28px' : len > 6 ? '32px' : '38px';
+    }
+
+    function flashDisplay() {
+      display.classList.remove('flash');
+      void display.offsetWidth;
+      display.classList.add('flash');
+    }
+
+    function addRipple(btn, e) {
+      const r = document.createElement('span');
+      r.className = 'ripple';
+      const rect = btn.getBoundingClientRect();
+      r.style.left = (e.clientX - rect.left - 30) + 'px';
+      r.style.top  = (e.clientY - rect.top  - 30) + 'px';
+      btn.appendChild(r);
+      setTimeout(() => r.remove(), 400);
+    }
+
+    document.querySelectorAll('.btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        addRipple(btn, e);
+        handle(btn.dataset.value);
+      });
+    });
+
+    function handle(val) {
+      if (val === 'C') {
+        current    = '0';
+        expression = '';
+        history.textContent = '';
+        justEvaled = false;
+        updateScreen('0');
+        return;
+      }
+
+      if (val === 'DEL') {
+        if (justEvaled) { current = '0'; justEvaled = false; updateScreen('0'); return; }
+        current = current.length > 1 ? current.slice(0, -1) : '0';
+        updateScreen(current);
+        return;
+      }
+
+      const operators = ['+', '-', '*', '/'];
+
+      if (val === '=') {
+        if (!expression && current === '0') return;
+        try {
+          const fullExpr = expression + current;
+          const result   = Function('"use strict"; return (' + fullExpr + ')')();
+          history.textContent = fullExpr.replace(/\*/g,'×').replace(/\//g,'÷') + ' =';
+          const rounded = parseFloat(result.toFixed(10));
+          current    = String(rounded);
+          expression = '';
+          justEvaled = true;
+          updateScreen(current);
+          flashDisplay();
+        } catch {
+          updateScreen('Error');
+          current = '0'; expression = '';
+        }
+        return;
+      }
+
+      if (val === '%') {
+        try {
+          const v = parseFloat(current);
+          current = String(v / 100);
+          updateScreen(current);
+        } catch { /* ignore */ }
+        return;
+      }
+
+      if (operators.includes(val)) {
+        justEvaled = false;
+        expression += current + val;
+        history.textContent = expression.replace(/\*/g,'×').replace(/\//g,'÷');
+        current = '0';
+        updateScreen('0');
+        return;
+      }
+
+      // Digit or dot
+      if (justEvaled) { current = ''; justEvaled = false; }
+
+      if (val === '.') {
+        if (current.includes('.')) return;
+        current = current === '0' ? '0.' : current + '.';
+      } else {
+        current = current === '0' ? val : current + val;
+      }
+
+      updateScreen(current);
+    }
+
+    // Keyboard support
+    document.addEventListener('keydown', (e) => {
+      const map = {
+        '0':'0','1':'1','2':'2','3':'3','4':'4',
+        '5':'5','6':'6','7':'7','8':'8','9':'9',
+        '.':'.', '+':'+', '-':'-', '*':'*', '/':'/',
+        'Enter':'=', '=':'=', 'Backspace':'DEL',
+        'Escape':'C', '%':'%'
+      };
+      if (map[e.key] !== undefined) {
+        e.preventDefault();
+        handle(map[e.key]);
+      }
+    });
+  </script>
+</body>
+</html>
