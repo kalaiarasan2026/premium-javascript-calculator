@@ -34,7 +34,7 @@ How to Run
 Download or clone this repository
 Open index.html in your browser
 
-Live Demo
+Live Demo:
 https://kalaiarasan2026.github.io/premium-javascript-calculator/
 
 Screenshots
@@ -47,5 +47,5 @@ Calculation history panel
 
 Author
 CodeWithKalai Tech
-YouTube: CodeWithKalai Tech
+YouTube: @CodeWithKalai 
 GitHub: github.com/kalaiarasan2026
